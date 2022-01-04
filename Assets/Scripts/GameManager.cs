@@ -5,7 +5,7 @@ public struct Prefabs
 {
     public Tile groundTilePrefab;
     public Tile pathTile;
-    public Tile entrancePrefab;
+    public EnemySpawner entrancePrefab;
     public Tile exitPrefab;
 }
 public class GameManager : MonoBehaviour
@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] Prefabs prefabs;
     [SerializeField] Transform tilesHolder;
     [SerializeField] float minPathLengthFactor = 1;
+    EnemySpawner spawner;
+    int lives = 3;
     Tile[,] groundTiles;
     int hexes = 0;
     Vector2Int[] path;
@@ -32,6 +34,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] bool generateTiles;
     void OnValidate()
     {
+        if(!UnityEditor.EditorApplication.isPlaying)
+            return;
+
         if (generateTiles)
         {
             generateTiles = false;
@@ -39,6 +44,8 @@ public class GameManager : MonoBehaviour
         }
     }
     #endregion
+
+    void Awake() => Instance = this;
 
     public void GenerateRandomGame(Vector2Int size)
     {
@@ -110,7 +117,9 @@ public class GameManager : MonoBehaviour
             Destroy(groundTiles[tile.x, tile.y]);
             if(tile == path[0])
             {
-                groundTiles[tile.x, tile.y] = Instantiate(prefabs.entrancePrefab, Utility.GetVector3(tile), Quaternion.identity, tilesHolder);
+                spawner = Instantiate(prefabs.entrancePrefab, Utility.GetVector3(tile), Quaternion.identity, tilesHolder);
+                spawner.Setup(path);
+                groundTiles[tile.x, tile.y] = spawner;
             }
             else if(tile == path[path.Length-1])
             {
@@ -215,4 +224,17 @@ public class GameManager : MonoBehaviour
     }
     
     public void AddHexes(int hexes) => this.hexes = hexes;
+    
+    public void LoseHP(Enemy enemy)
+    {
+        lives --;
+        print("Lost HP!");
+        if(lives <= 0)
+        {
+            spawner.StopSimulating();
+        }
+        spawner.RemoveMe(enemy);
+    }
+
+    public void RemoveEnemy(Enemy enemy) => spawner.RemoveMe(enemy);
 }

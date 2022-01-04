@@ -6,8 +6,10 @@ public class EnemySpawner : Tile
 {
     [SerializeField] EnemyController cubeEnemyprefab;
     [SerializeField] EnemyController prismEnemyPrefab;
-    [SerializeField] Transform enemiesHolder;
-    int lives = 3;
+    [SerializeField] Transform enemiesHolderPrefab;
+    List<Enemy> enemies = new List<Enemy>();
+    Transform enemiesHolder;
+    Vector2Int[] path;
     int currentLevel = 0;
     Vector3 spawnPoint;
     Vector3 orientation;
@@ -17,7 +19,13 @@ public class EnemySpawner : Tile
     int noOfPrismEnemiesLeft = 0;
     bool isSimulating = true;
 
-    void Start()=> LevelUp(0);
+    void Start()
+    {
+        LevelUp(0);
+        spawnPoint = transform.position;
+        spawnPoint.z  = (float)-0.5;
+        enemiesHolder = Instantiate(enemiesHolderPrefab, Vector3.zero, Quaternion.identity);
+    } 
     
     void Update() 
     {
@@ -28,26 +36,29 @@ public class EnemySpawner : Tile
         {
             timeLeftToSpawn = levelSpawnDelay;
             int choice = Random.Range(0, noOfPrismEnemiesLeft + noOfCubeEnemiesLeft);
+            EnemyController enemy;
             if(choice < noOfPrismEnemiesLeft)
             {
                 noOfPrismEnemiesLeft --;
-                Instantiate(prismEnemyPrefab, spawnPoint, Quaternion.LookRotation(orientation, Vector3.down), enemiesHolder);
+                enemy = Instantiate(prismEnemyPrefab, spawnPoint, Quaternion.LookRotation(orientation, Vector3.back), enemiesHolder);
             }
             else
             {
                 noOfCubeEnemiesLeft--;
-                Instantiate(cubeEnemyprefab, spawnPoint, Quaternion.LookRotation(orientation, Vector3.down), enemiesHolder);
+                enemy = Instantiate(cubeEnemyprefab, spawnPoint, Quaternion.LookRotation(orientation, Vector3.back), enemiesHolder);
             }
+            enemies.Add(enemy);
+            enemy.Setup(path);
         }
 
         if(noOfCubeEnemiesLeft + noOfPrismEnemiesLeft == 0)
             LevelUp(currentLevel+1);
     }
 
-    public void Setup(Vector3 spawnPoint, Vector2 orientation)
+    public void Setup(Vector2Int[] path)
     {
-        this.spawnPoint = spawnPoint;
-        this.orientation = orientation;
+        this.path = path;
+        orientation = Utility.GetVector3(path[1] - path[0]);
     }
 
     void LevelUp(int nextLevel)
@@ -73,9 +84,18 @@ public class EnemySpawner : Tile
         return Mathf.FloorToInt(3 + level - Mathf.Exp(-(float)0.5 * level));
     }
 
-    void LoseLife()
+    public void StopSimulating()
     {
-        lives--;
         isSimulating = false;
+        foreach (var enemy in enemies)
+        {
+            Destroy(enemy.gameObject);
+        }
+        enemies.RemoveRange(0, enemies.Count);
+    }
+
+    public void RemoveMe(Enemy enemy)
+    {
+        enemies.Remove(enemy);
     }
 }
