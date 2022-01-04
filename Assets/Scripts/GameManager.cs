@@ -8,9 +8,10 @@ public struct Prefabs
     public EnemySpawner entrancePrefab;
     public Tile exitPrefab;
 }
-public class GameManager : MonoBehaviour
+public class GameManager : Shop
 {
     public static GameManager Instance;
+    public UIManager uIManager;
     [SerializeField] Camera camera;
     [SerializeField] Prefabs prefabs;
     [SerializeField] Transform tilesHolder;
@@ -18,7 +19,12 @@ public class GameManager : MonoBehaviour
     EnemySpawner spawner;
     int lives = 3;
     Tile[,] groundTiles;
-    int hexes = 0;
+    int _hexes = 200;
+    int hexes
+    {
+        get{return _hexes;}
+        set{_hexes = value; uIManager.gamePanel.UpdateHexes(_hexes);}
+    }
     Vector2Int[] path;
     Vector2Int size;
     readonly Vector2Int[] legalMoves =
@@ -32,6 +38,7 @@ public class GameManager : MonoBehaviour
     #region Testing
     [SerializeField] Vector2Int Size;
     [SerializeField] bool generateTiles;
+    [SerializeField] bool buyTurret;
     void OnValidate()
     {
         if(!UnityEditor.EditorApplication.isPlaying)
@@ -41,6 +48,12 @@ public class GameManager : MonoBehaviour
         {
             generateTiles = false;
             GenerateRandomGame(Size);
+        }
+        
+        if(buyTurret)
+        {
+            buyTurret = false;
+            ActivateBuyMode(0);
         }
     }
     #endregion
@@ -93,7 +106,6 @@ public class GameManager : MonoBehaviour
                 
                 List<Vector2Int> moves = GetAvailableChoices(path[path.Count -1], size, path.ToArray(), CanEnd(path.Count, size) );
                 int choice = Random.Range(0, moves.Count);
-                print("Initial Pos: " + path[path.Count -1] + ", Choice: " + choice + ", Max: " + moves.Count);
                 if(moves.Count == 0)
                 {
                     bugExists = true;
@@ -114,7 +126,7 @@ public class GameManager : MonoBehaviour
         // Generate Path
         foreach (var tile in path)
         {
-            Destroy(groundTiles[tile.x, tile.y]);
+            Destroy(groundTiles[tile.x, tile.y].gameObject);
             if(tile == path[0])
             {
                 spawner = Instantiate(prefabs.entrancePrefab, Utility.GetVector3(tile), Quaternion.identity, tilesHolder);
@@ -141,7 +153,10 @@ public class GameManager : MonoBehaviour
         if (groundTiles != null)
         {
             foreach (var item in groundTiles)
-                Destroy(item.gameObject);
+            {
+                if(item!= null)
+                    Destroy(item.gameObject);
+            }
         }
 
         groundTiles = new Tile[size.x, size.y];
@@ -182,13 +197,11 @@ public class GameManager : MonoBehaviour
 
             if(IsSide(newPos, size) && !canEnd)
             {
-                print("Ended because we can't end, New Pos: " + newPos + ", Size: " + size);
                 isClean = false;
             }
 
             if (isClean) 
             {
-                print("Added: " + newPos);
                 Choices.Add(move);
                 // Increase the chances of getting it
                 if(IsAwayFromEntrance(move, path[0], size))
@@ -219,22 +232,34 @@ public class GameManager : MonoBehaviour
     bool CanEnd(int currentLength, Vector2Int size)
     {
         int maxLength = Mathf.FloorToInt(Mathf.Min(size.x, size.y) * minPathLengthFactor);
-        print("Current Length: " + currentLength + ", Max Length: " + maxLength);
         return currentLength >= maxLength;
     }
     
-    public void AddHexes(int hexes) => this.hexes = hexes;
+    public void AddHexes(int hexes) => this.hexes += hexes;
+
+    public void LoseHexes(int hexes) => this.hexes -= hexes;
     
     public void LoseHP(Enemy enemy)
     {
         lives --;
-        print("Lost HP!");
+        uIManager.gamePanel.UpdateLives(lives);
         if(lives <= 0)
         {
+            uIManager.LoseScreen(Mathf.FloorToInt(spawner.totalTime), hexes);
             spawner.StopSimulating();
         }
-        spawner.RemoveMe(enemy);
     }
 
-    public void RemoveEnemy(Enemy enemy) => spawner.RemoveMe(enemy);
+    public void Quit() => Application.Quit();
+
+    public void ClearGrid()
+    {
+        // Clear the grid.
+        if (groundTiles != null)
+        {
+            foreach (var item in groundTiles)
+                Destroy(item.gameObject);
+        }
+        groundTiles = null;
+    }
 }

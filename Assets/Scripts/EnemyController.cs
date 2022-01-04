@@ -29,10 +29,8 @@ public class EnemyController : Enemy
         if(noOffsetPos == Utility.GetVector3(path[nextWayPoint]))
         {
             nextWayPoint++;
-            print(nextWayPoint + "/" + path.Length);
             if(nextWayPoint >= path.Length)
             {
-                print("Attempted to Destroy");
                 GameManager.Instance.LoseHP(this);
                 Destroy(gameObject);
             }

@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54ee1c052aebc5944916c7479ad5eadd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isPath: 0
-  objectUsed: {fileID: 0}
+  normalTileColor: {r: 0, g: 0, b: 0, a: 0}
+  buyModeColor: {r: 0, g: 0, b: 0, a: 0}
+  isPath: 1
   cubeEnemyprefab: {fileID: 8581294739972387832, guid: f4a1b0deb3e08524bac19471649a3a27, type: 3}
   prismEnemyPrefab: {fileID: 5484960601969062661, guid: 777dac0bbfc9f15448100dffd88e73e4, type: 3}
   enemiesHolderPrefab: {fileID: 420022199569787456, guid: 30c11d85c8ad30e47a30d5f5e3b86d75, type: 3}

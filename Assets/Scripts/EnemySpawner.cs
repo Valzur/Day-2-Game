@@ -7,31 +7,36 @@ public class EnemySpawner : Tile
     [SerializeField] EnemyController cubeEnemyprefab;
     [SerializeField] EnemyController prismEnemyPrefab;
     [SerializeField] Transform enemiesHolderPrefab;
-    List<Enemy> enemies = new List<Enemy>();
     Transform enemiesHolder;
     Vector2Int[] path;
     int currentLevel = 0;
     Vector3 spawnPoint;
     Vector3 orientation;
     float levelSpawnDelay;
-    float timeLeftToSpawn;
+    float timeLeftToSpawn = 10f;
     int noOfCubeEnemiesLeft = 0;
     int noOfPrismEnemiesLeft = 0;
-    bool isSimulating = true;
+    [HideInInspector] public float totalTime = 0;
+    bool isSimulating = false;
 
     void Start()
     {
         LevelUp(0);
+        isSimulating = true;
         spawnPoint = transform.position;
         spawnPoint.z  = (float)-0.5;
-        enemiesHolder = Instantiate(enemiesHolderPrefab, Vector3.zero, Quaternion.identity);
+        if(!enemiesHolder)
+            enemiesHolder = Instantiate(enemiesHolderPrefab, Vector3.zero, Quaternion.identity);
     } 
     
     void Update() 
     {
         if(!isSimulating)
             return;
+        totalTime += Time.deltaTime;
         timeLeftToSpawn -= Time.deltaTime;
+        GameManager.Instance.uIManager.gamePanel.UpdateTotalTime(Mathf.FloorToInt(totalTime));
+        GameManager.Instance.uIManager.gamePanel.UpdateTimeTillNextEnemy(Mathf.FloorToInt(timeLeftToSpawn));
         if(timeLeftToSpawn <= 0)
         {
             timeLeftToSpawn = levelSpawnDelay;
@@ -47,7 +52,6 @@ public class EnemySpawner : Tile
                 noOfCubeEnemiesLeft--;
                 enemy = Instantiate(cubeEnemyprefab, spawnPoint, Quaternion.LookRotation(orientation, Vector3.back), enemiesHolder);
             }
-            enemies.Add(enemy);
             enemy.Setup(path);
         }
 
@@ -87,15 +91,10 @@ public class EnemySpawner : Tile
     public void StopSimulating()
     {
         isSimulating = false;
-        foreach (var enemy in enemies)
+        foreach (var enemy in Enemy.AllEnemies)
         {
             Destroy(enemy.gameObject);
         }
-        enemies.RemoveRange(0, enemies.Count);
-    }
-
-    public void RemoveMe(Enemy enemy)
-    {
-        enemies.Remove(enemy);
+        Enemy.AllEnemies.RemoveRange(0, Enemy.AllEnemies.Count);
     }
 }
