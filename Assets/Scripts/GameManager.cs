@@ -35,29 +35,6 @@ public class GameManager : Shop
         Vector2Int.left
     };
 
-    #region Testing
-    [SerializeField] Vector2Int Size;
-    [SerializeField] bool generateTiles;
-    [SerializeField] bool buyTurret;
-    void OnValidate()
-    {
-        if(!UnityEditor.EditorApplication.isPlaying)
-            return;
-
-        if (generateTiles)
-        {
-            generateTiles = false;
-            GenerateRandomGame(Size);
-        }
-        
-        if(buyTurret)
-        {
-            buyTurret = false;
-            ActivateBuyMode(0);
-        }
-    }
-    #endregion
-
     void Awake() => Instance = this;
 
     public void GenerateRandomGame(Vector2Int size)
