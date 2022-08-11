@@ -12,5 +12,6 @@ Simply download the game from the releases section and run "Day 2 Game.exe",
 or clone the entire repo if you'd like the source code :"D
     
 ## Demo
+Link on [Itch.io](https://valzur.itch.io/day-2-3-game)
 ![](https://i.ibb.co/QN73J7v/Day-2-Game-2022-07-22-15-58-26.gif)
 ![Logo](https://i.ibb.co/wWpzTnk/Light-bg-LOGO.png)
